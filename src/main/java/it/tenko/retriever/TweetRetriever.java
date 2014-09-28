@@ -1,5 +1,6 @@
 package it.tenko.retriever;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,24 +87,31 @@ public class TweetRetriever extends Thread {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+		getPropValues();
 		setupConnection();
 		process();
 	}
 
-	public void getPropValues() throws IOException {
+	public static void getPropValues() {
 
 		Properties prop = new Properties();
 		String propFileName = "twitter.properties";
 
-		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propFileName);
+		try {
+			InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(propFileName);
+			prop.load(inputStream);
 		
-		prop.load(inputStream);
-		if (inputStream == null) {
-			throw new FileNotFoundException("property file '" + propFileName
-					+ "' not found in the classpath");
+			API_KEY = prop.getProperty("API_KEY");
+			API_SECRET = prop.getProperty("API_SECRET");
+			TOKEN = prop.getProperty("TOKEN");
+			TOKEN_SECRET = prop.getProperty("TOKEN_SECRET");
+			TWITTER_ACCOUNT = Long.valueOf(prop.getProperty("TWITTER_ACCOUNT"));
 		}
-
+		catch(Exception e){
+			System.out.println("SOMETHING WENT WRONG WHILE LOADING THE PROPERTIES FROM THE twitter.properties FILE!!");
+			e.printStackTrace();
+		}
 	}
 
 	private static String getTweetFromJSON(String msg) {
@@ -150,6 +158,7 @@ public class TweetRetriever extends Thread {
 	@Override
 	public void start() {
 		running = true;
+		getPropValues();
 		setupConnection();
 		super.start();
 	}
